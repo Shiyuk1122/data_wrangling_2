@@ -1,0 +1,105 @@
+---
+title: "Data_wrangling_2"
+author: "Shiyu KANG"
+date: "2026-10-15"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+library(rvest)
+library(tidyverse)
+library(httr)
+```
+
+Import NSDUH
+
+```{r}
+url = "https://www.samhsa.gov/data/sites/default/files/NSDUHsaeShortTermCHG2015/NSDUHsaeShortTermCHG2015.htm"
+
+drug_use_html = 
+  read_html(url) 
+```
+
+Pull the table out
+
+```{r}
+marj_df = 
+drug_use_html |>
+  html_table() |>
+  first() |>
+  slice(-1)
+```
+
+##Imort some Star Wars Data
+
+pull in the html
+
+```{r}
+swm_html = 
+  read_html_live("https://www.imdb.com/list/ls070150896/") 
+```
+
+```{r}
+swm_title_vec = 
+  swm_html |>
+  html_elements(".ipc-title-link-wrapper .ipc-title__text") |>
+  html_text()
+
+swm_metascore_vec = 
+  swm_html |>
+  html_elements(".metacritic-score-box") |>
+  html_text()
+
+swm_runtime_vec = 
+  swm_html |>
+  html_elements(".ipc-inline-list__item:nth-child(2)") |>
+  html_text()
+
+swm_df = 
+  tibble(
+    title = swm_title_vec,
+    socre = swm_metascore_vec,
+    runtime = swm_runtime_vec
+  )
+```
+
+## Use APIs
+
+getting a csv
+
+```{r}
+nyc_water_df = 
+  GET("https://data.cityofnewyork.us/api/v3/views/ia2d-e54m/query.csv") |>
+  content("parsed") |>
+  select(year:per_capita_gallons_per_person_per_day)
+```
+
+getting a json
+
+```{r}
+nyc_water_json = 
+  GET("https://data.cityofnewyork.us/api/v3/views/ia2d-e54m/query.json") |>
+  content("text") |>
+  jsonlite::fromJSON() |>
+  as_tibble() |>
+  select(year:per_capita_gallons_per_person_per_day)
+```
+
+Look at some pokemen!
+
+```{r}
+pokemon_json = 
+  GET("https://pokeapi.co/api/v2/pokemon/1")
+
+pokemen_data = 
+  pokemon_json |>
+  content()
+
+pokemen_data[["name"]]
+pokemen_data[["height"]]
+pokemen_data[["abilities"]]
+
+```
+
